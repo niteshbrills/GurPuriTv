@@ -38,6 +38,8 @@ public class HomeActivity extends AppCompatActivity implements EventFragment.OnF
             public void onTabSelected(@IdRes int tabId) {
                 Fragment mFragment = null;
 
+
+                //==
                 switch (tabId) {
                     case R.id.tab_Event:
 
