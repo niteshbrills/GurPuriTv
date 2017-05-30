@@ -29,15 +29,10 @@ public class ContactUsFragment extends Fragment    implements AdvancedWebView.Li
     //===================================================\\
     private AdvancedWebView wv_WebView;
 
-
-
-
-
-
     public ContactUsFragment() {
         // Required empty public constructor
     }
-
+    //==========================\\
 
     public static ContactUsFragment newInstance(String param1, String param2) {
         ContactUsFragment fragment = new ContactUsFragment();
