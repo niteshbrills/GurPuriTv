@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.TransNav">
         <activity
-            android:name="com.brill.nitesh.myapplication.Activity.FiveColorChangingTabsActivity"
+            android:name="com.brill.nitesh.myapplication.Activity.HomeActivity"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

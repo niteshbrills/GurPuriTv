@@ -11,8 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.brill.nitesh.myapplication.Fragments.ContactUsFragment;
 import com.brill.nitesh.myapplication.Fragments.EventFragment;
-import com.brill.nitesh.myapplication.Fragments.LIveFragment;
 import com.brill.nitesh.myapplication.Fragments.FoodFragment;
+import com.brill.nitesh.myapplication.Fragments.LIveFragment;
 import com.brill.nitesh.myapplication.Fragments.LoginFragment;
 import com.brill.nitesh.myapplication.R;
 import com.roughike.bottombar.BottomBar;
@@ -22,14 +22,14 @@ import com.roughike.bottombar.OnTabSelectListener;
 /**
  * Created by iiro on 7.6.2016.
  */
-public class FiveColorChangingTabsActivity extends AppCompatActivity implements EventFragment.OnFragmentInteractionListener, LIveFragment.OnFragmentInteractionListener, LoginFragment.OnFragmentInteractionListener, ContactUsFragment.OnFragmentInteractionListener, FoodFragment.OnFragmentInteractionListener {
+public class HomeActivity extends AppCompatActivity implements EventFragment.OnFragmentInteractionListener, LIveFragment.OnFragmentInteractionListener, LoginFragment.OnFragmentInteractionListener, ContactUsFragment.OnFragmentInteractionListener, FoodFragment.OnFragmentInteractionListener {
 
+    private String nitesh;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_color_changing_tabs);
-
 
 
         BottomBar bottomBar = (BottomBar) findViewById(R.id.bottomBar);
