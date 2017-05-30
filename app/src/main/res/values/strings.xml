@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lorem_ipsum">Lorem ipsum dolor sit amete mi.</string>
+    <string name="title_activity_custom_color">CustomColorActivity</string>
+</resources>

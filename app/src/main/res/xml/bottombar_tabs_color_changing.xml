@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tabs>
+
+    <tab
+        barColorWhenSelected="#5D4037"
+        icon="@drawable/ic_favorites"
+        id="@+id/tab_Live"
+        title="Live" />
+    <tab
+        barColorWhenSelected="#7B1FA2"
+        icon="@drawable/ic_nearby"
+        id="@+id/tab_Contact"
+        title="Contact Us" />
+    <tab
+        barColorWhenSelected="#FF5252"
+        icon="@drawable/ic_friends"
+        id="@+id/tab_Login"
+        title="Login" />
+    <tab
+        barColorWhenSelected="@color/colorAccent"
+        icon="@drawable/ic_recents"
+        id="@+id/tab_Event"
+        title="Event" />
+
+</tabs>
