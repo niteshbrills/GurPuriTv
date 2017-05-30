@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.brill.nitesh.myapplication.Activity.AdvancedWebView;
 import com.brill.nitesh.myapplication.R;
@@ -72,7 +71,7 @@ public class LoginFragment extends Fragment implements AdvancedWebView.Listener 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_friend, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_login, container, false);
         wv_WebView = (AdvancedWebView) rootView.findViewById(R.id.wv_WebView);
         wv_WebView.setListener(getActivity(), this);
         wv_WebView.loadUrl("http://www.gurpuritv.com/Admin/Login.php");
