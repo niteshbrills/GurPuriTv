@@ -37,23 +37,23 @@ public class HomeActivity extends AppCompatActivity implements EventFragment.OnF
             @Override
             public void onTabSelected(@IdRes int tabId) {
                 Fragment mFragment = null;
-                String message = "Content for ";
+
                 switch (tabId) {
                     case R.id.tab_Event:
-                        message += "recents";
+
                         mFragment = EventFragment.newInstance("Recents", "");
                         break;
                     case R.id.tab_Live:
-                        message += "favorites";
+
                         mFragment = LIveFragment.newInstance("Favorites", "");
 
                         break;
                     case R.id.tab_Contact:
-                        message += "nearby";
+
                         mFragment = ContactUsFragment.newInstance("Nearby", "");
                         break;
                     case R.id.tab_Login:
-                        message += "friends";
+
                         mFragment = LoginFragment.newInstance("Friends", "");
                         break;
 
