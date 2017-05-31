@@ -4,68 +4,60 @@ package com.brill.nitesh.myapplication.Activity;
  * Created by Nitesh Android on 30-05-2017.
  */
 
-import android.view.ViewGroup;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Request;
-import android.os.Environment;
-import android.webkit.CookieManager;
-import java.util.Arrays;
+import android.app.Fragment;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import java.util.HashMap;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
-import android.view.InputEvent;
-import android.view.KeyEvent;
-import android.webkit.ClientCertRequest;
-import android.webkit.HttpAuthHandler;
-import android.webkit.SslErrorHandler;
-import android.webkit.URLUtil;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Message;
+import android.util.AttributeSet;
+import android.util.Base64;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.ClientCertRequest;
 import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
+import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions.Callback;
+import android.webkit.HttpAuthHandler;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
-import android.webkit.WebStorage.QuotaUpdater;
-import android.app.Fragment;
-import android.util.Base64;
-import android.os.Build;
-import android.webkit.DownloadListener;
-import android.graphics.Bitmap;
-import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
+import android.webkit.SslErrorHandler;
+import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.AttributeSet;
+import android.webkit.WebStorage.QuotaUpdater;
 import android.webkit.WebView;
-import java.util.MissingResourceException;
-import java.util.Locale;
-import java.util.LinkedList;
-import java.util.Collection;
-import java.util.List;
+import android.webkit.WebViewClient;
+
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 
 /** Advanced WebView component for Android that works as intended out of the box */
 @SuppressWarnings("deprecation")
 public class AdvancedWebView extends WebView {
-
-    public interface Listener {
-        void onPageStarted(String url, Bitmap favicon);
-        void onPageFinished(String url);
-        void onPageError(int errorCode, String description, String failingUrl);
-        void onDownloadRequested(String url, String suggestedFilename, String mimeType, long contentLength, String contentDisposition, String userAgent);
-        void onExternalPageRequest(String url);
-    }
 
     public static final String PACKAGE_NAME_DOWNLOAD_MANAGER = "com.android.providers.downloads";
     protected static final int REQUEST_CODE_FILE_PICKER = 51426;
@@ -74,10 +66,11 @@ public class AdvancedWebView extends WebView {
     protected static final String CHARSET_DEFAULT = "UTF-8";
     /** Alternative browsers that have their own rendering engine and *may* be installed on this device */
     protected static final String[] ALTERNATIVE_BROWSERS = new String[] { "org.mozilla.firefox", "com.android.chrome", "com.opera.browser", "org.mozilla.firefox_beta", "com.chrome.beta", "com.opera.browser.beta" };
+    protected final List<String> mPermittedHostnames = new LinkedList<String>();
+    protected final Map<String, String> mHttpHeaders = new HashMap<String, String>();
     protected WeakReference<Activity> mActivity;
     protected WeakReference<Fragment> mFragment;
     protected Listener mListener;
-    protected final List<String> mPermittedHostnames = new LinkedList<String>();
     /** File upload callback for platform versions prior to Android 5.0 */
     protected ValueCallback<Uri> mFileUploadCallbackFirst;
     /** File upload callback for Android 5.0+ */
@@ -89,8 +82,6 @@ public class AdvancedWebView extends WebView {
     protected WebChromeClient mCustomWebChromeClient;
     protected boolean mGeolocationEnabled;
     protected String mUploadableFileTypes = "*/*";
-    protected final Map<String, String> mHttpHeaders = new HashMap<String, String>();
-
     public AdvancedWebView(Context context) {
         super(context);
         init(context);
@@ -104,6 +95,140 @@ public class AdvancedWebView extends WebView {
     public AdvancedWebView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context);
+    }
+
+    @SuppressLint("NewApi")
+    protected static void setAllowAccessFromFileUrls(final WebSettings webSettings, final boolean allowed) {
+        if (Build.VERSION.SDK_INT >= 16) {
+            webSettings.setAllowFileAccessFromFileURLs(allowed);
+            webSettings.setAllowUniversalAccessFromFileURLs(allowed);
+        }
+    }
+
+    protected static String makeUrlUnique(final String url) {
+        StringBuilder unique = new StringBuilder();
+        unique.append(url);
+
+        if (url.contains("?")) {
+            unique.append('&');
+        } else {
+            if (url.lastIndexOf('/') <= 7) {
+                unique.append('/');
+            }
+            unique.append('?');
+        }
+
+        unique.append(System.currentTimeMillis());
+        unique.append('=');
+        unique.append(1);
+
+        return unique.toString();
+    }
+
+    protected static String getLanguageIso3() {
+        try {
+            return Locale.getDefault().getISO3Language().toLowerCase(Locale.US);
+        } catch (MissingResourceException e) {
+            return LANGUAGE_DEFAULT_ISO3;
+        }
+    }
+
+    protected static String decodeBase64(final String base64) throws IllegalArgumentException, UnsupportedEncodingException {
+        final byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+        return new String(bytes, CHARSET_DEFAULT);
+    }
+
+    /**
+     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
+     *
+     * @return whether file uploads can be used
+     */
+    public static boolean isFileUploadAvailable() {
+        return isFileUploadAvailable(false);
+    }
+
+    /**
+     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
+     * <p>
+     * On Android 4.4.3/4.4.4, file uploads may be possible but will come with a wrong MIME type
+     *
+     * @param needsCorrectMimeType whether a correct MIME type is required for file uploads or `application/octet-stream` is acceptable
+     * @return whether file uploads can be used
+     */
+    public static boolean isFileUploadAvailable(final boolean needsCorrectMimeType) {
+        if (Build.VERSION.SDK_INT == 19) {
+            final String platformVersion = (Build.VERSION.RELEASE == null) ? "" : Build.VERSION.RELEASE;
+
+            return !needsCorrectMimeType && (platformVersion.startsWith("4.4.3") || platformVersion.startsWith("4.4.4"));
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Handles a download by loading the file from `fromUrl` and saving it to `toFilename` on the external storage
+     * <p>
+     * This requires the two permissions `android.permission.INTERNET` and `android.permission.WRITE_EXTERNAL_STORAGE`
+     * <p>
+     * Only supported on API level 9 (Android 2.3) and above
+     *
+     * @param context    a valid `Context` reference
+     * @param fromUrl    the URL of the file to download, e.g. the one from `AdvancedWebView.onDownloadRequested(...)`
+     * @param toFilename the name of the destination file where the download should be saved, e.g. `myImage.jpg`
+     * @return whether the download has been successfully handled or not
+     */
+    @SuppressLint("NewApi")
+    public static boolean handleDownload(final Context context, final String fromUrl, final String toFilename) {
+        if (Build.VERSION.SDK_INT < 9) {
+            throw new RuntimeException("Method requires API level 9 or above");
+        }
+
+        final Request request = new Request(Uri.parse(fromUrl));
+        if (Build.VERSION.SDK_INT >= 11) {
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        }
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, toFilename);
+
+        final DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+        try {
+            try {
+                dm.enqueue(request);
+            } catch (SecurityException e) {
+                if (Build.VERSION.SDK_INT >= 11) {
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+                }
+                dm.enqueue(request);
+            }
+
+            return true;
+        }
+        // if the download manager app has been disabled on the device
+        catch (IllegalArgumentException e) {
+            // show the settings screen where the user can enable the download manager app again
+            openAppSettings(context, AdvancedWebView.PACKAGE_NAME_DOWNLOAD_MANAGER);
+
+            return false;
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private static boolean openAppSettings(final Context context, final String packageName) {
+        if (Build.VERSION.SDK_INT < 9) {
+            throw new RuntimeException("Method requires API level 9 or above");
+        }
+
+        try {
+            final Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + packageName));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            context.startActivity(intent);
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public void setListener(final Activity activity, final Listener listener) {
@@ -365,14 +490,6 @@ public class AdvancedWebView extends WebView {
         }
         else {
             return true;
-        }
-    }
-
-    @SuppressLint("NewApi")
-    protected static void setAllowAccessFromFileUrls(final WebSettings webSettings, final boolean allowed) {
-        if (Build.VERSION.SDK_INT >= 16) {
-            webSettings.setAllowFileAccessFromFileURLs(allowed);
-            webSettings.setAllowUniversalAccessFromFileURLs(allowed);
         }
     }
 
@@ -656,6 +773,8 @@ public class AdvancedWebView extends WebView {
 //                }
 //            }
 
+
+            //=====================
             @Override
             public void onScaleChanged(WebView view, float oldScale, float newScale) {
                 if (mCustomWebViewClient != null) {
@@ -1043,27 +1162,6 @@ public class AdvancedWebView extends WebView {
         loadUrl(url, additionalHttpHeaders);
     }
 
-    protected static String makeUrlUnique(final String url) {
-        StringBuilder unique = new StringBuilder();
-        unique.append(url);
-
-        if (url.contains("?")) {
-            unique.append('&');
-        }
-        else {
-            if (url.lastIndexOf('/') <= 7) {
-                unique.append('/');
-            }
-            unique.append('?');
-        }
-
-        unique.append(System.currentTimeMillis());
-        unique.append('=');
-        unique.append(1);
-
-        return unique.toString();
-    }
-
     protected boolean isHostnameAllowed(final String url) {
         // if the permitted hostnames have not been restricted to a specific set
         if (mPermittedHostnames.size() == 0) {
@@ -1093,15 +1191,6 @@ public class AdvancedWebView extends WebView {
 
     protected boolean hasError() {
         return (mLastError + 500) >= System.currentTimeMillis();
-    }
-
-    protected static String getLanguageIso3() {
-        try {
-            return Locale.getDefault().getISO3Language().toLowerCase(Locale.US);
-        }
-        catch (MissingResourceException e) {
-            return LANGUAGE_DEFAULT_ISO3;
-        }
     }
 
     /**
@@ -1142,11 +1231,6 @@ public class AdvancedWebView extends WebView {
         return "Choose a file";
     }
 
-    protected static String decodeBase64(final String base64) throws IllegalArgumentException, UnsupportedEncodingException {
-        final byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
-        return new String(bytes, CHARSET_DEFAULT);
-    }
-
     @SuppressLint("NewApi")
     protected void openFileInput(final ValueCallback<Uri> fileUploadCallbackFirst, final ValueCallback<Uri[]> fileUploadCallbackSecond, final boolean allowMultiple) {
         if (mFileUploadCallbackFirst != null) {
@@ -1178,100 +1262,16 @@ public class AdvancedWebView extends WebView {
         }
     }
 
-    /**
-     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
-     *
-     * @return whether file uploads can be used
-     */
-    public static boolean isFileUploadAvailable() {
-        return isFileUploadAvailable(false);
-    }
+    public interface Listener {
+        void onPageStarted(String url, Bitmap favicon);
 
-    /**
-     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
-     *
-     * On Android 4.4.3/4.4.4, file uploads may be possible but will come with a wrong MIME type
-     *
-     * @param needsCorrectMimeType whether a correct MIME type is required for file uploads or `application/octet-stream` is acceptable
-     * @return whether file uploads can be used
-     */
-    public static boolean isFileUploadAvailable(final boolean needsCorrectMimeType) {
-        if (Build.VERSION.SDK_INT == 19) {
-            final String platformVersion = (Build.VERSION.RELEASE == null) ? "" : Build.VERSION.RELEASE;
+        void onPageFinished(String url);
 
-            return !needsCorrectMimeType && (platformVersion.startsWith("4.4.3") || platformVersion.startsWith("4.4.4"));
-        }
-        else {
-            return true;
-        }
-    }
+        void onPageError(int errorCode, String description, String failingUrl);
 
-    /**
-     * Handles a download by loading the file from `fromUrl` and saving it to `toFilename` on the external storage
-     *
-     * This requires the two permissions `android.permission.INTERNET` and `android.permission.WRITE_EXTERNAL_STORAGE`
-     *
-     * Only supported on API level 9 (Android 2.3) and above
-     *
-     * @param context a valid `Context` reference
-     * @param fromUrl the URL of the file to download, e.g. the one from `AdvancedWebView.onDownloadRequested(...)`
-     * @param toFilename the name of the destination file where the download should be saved, e.g. `myImage.jpg`
-     * @return whether the download has been successfully handled or not
-     */
-    @SuppressLint("NewApi")
-    public static boolean handleDownload(final Context context, final String fromUrl, final String toFilename) {
-        if (Build.VERSION.SDK_INT < 9) {
-            throw new RuntimeException("Method requires API level 9 or above");
-        }
+        void onDownloadRequested(String url, String suggestedFilename, String mimeType, long contentLength, String contentDisposition, String userAgent);
 
-        final Request request = new Request(Uri.parse(fromUrl));
-        if (Build.VERSION.SDK_INT >= 11) {
-            request.allowScanningByMediaScanner();
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        }
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, toFilename);
-
-        final DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        try {
-            try {
-                dm.enqueue(request);
-            }
-            catch (SecurityException e) {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-                }
-                dm.enqueue(request);
-            }
-
-            return true;
-        }
-        // if the download manager app has been disabled on the device
-        catch (IllegalArgumentException e) {
-            // show the settings screen where the user can enable the download manager app again
-            openAppSettings(context, AdvancedWebView.PACKAGE_NAME_DOWNLOAD_MANAGER);
-
-            return false;
-        }
-    }
-
-    @SuppressLint("NewApi")
-    private static boolean openAppSettings(final Context context, final String packageName) {
-        if (Build.VERSION.SDK_INT < 9) {
-            throw new RuntimeException("Method requires API level 9 or above");
-        }
-
-        try {
-            final Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + packageName));
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            context.startActivity(intent);
-
-            return true;
-        }
-        catch (Exception e) {
-            return false;
-        }
+        void onExternalPageRequest(String url);
     }
 
     /** Wrapper for methods related to alternative browsers that have their own rendering engines */
