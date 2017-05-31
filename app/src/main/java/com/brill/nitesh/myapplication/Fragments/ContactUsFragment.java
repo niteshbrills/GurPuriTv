@@ -10,21 +10,19 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.brill.nitesh.myapplication.Activity.AdvancedWebView;
 import com.brill.nitesh.myapplication.R;
 
 
-public class ContactUsFragment extends Fragment    implements AdvancedWebView.Listener {
+public class ContactUsFragment extends Fragment implements AdvancedWebView.Listener {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
     private OnFragmentInteractionListener mListener;
+
 
     //===================================================\\
     private AdvancedWebView wv_WebView;
@@ -56,19 +54,12 @@ public class ContactUsFragment extends Fragment    implements AdvancedWebView.Li
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
-
         View rootView = inflater.inflate(R.layout.fragment_nearby, container, false);
-        TextView textview = (TextView) rootView.findViewById(R.id.textView);
-        textview.setText("ContactUsFragment");
-
 
         wv_WebView = (AdvancedWebView) rootView.findViewById(R.id.wv_WebView);
         wv_WebView.setListener(getActivity(), this);
         wv_WebView.loadUrl("http://www.gurpuritv.com/contact.php");
         return rootView;
-
-
 
     }
 
@@ -90,7 +81,6 @@ public class ContactUsFragment extends Fragment    implements AdvancedWebView.Li
     @Override
     public void onDestroy() {
         wv_WebView.onDestroy();
-        // ...
         super.onDestroy();
     }
 
@@ -98,7 +88,7 @@ public class ContactUsFragment extends Fragment    implements AdvancedWebView.Li
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         wv_WebView.onActivityResult(requestCode, resultCode, intent);
-        // ...
+
     }
 
     @Override

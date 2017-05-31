@@ -10,15 +10,15 @@
         android:label="GurPuri Tv"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.TransNav">
-        <activity
-            android:name=".Activity.HomeActivity"
-            android:launchMode="singleInstance">
+
+        <activity android:name=".Splash.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Activity.HomeActivity" />
     </application>
 
 </manifest>

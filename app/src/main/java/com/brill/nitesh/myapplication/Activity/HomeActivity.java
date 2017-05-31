@@ -41,20 +41,15 @@ public class HomeActivity extends AppCompatActivity implements EventFragment.OnF
                 //==
                 switch (tabId) {
                     case R.id.tab_Event:
-
                         mFragment = EventFragment.newInstance("Recents", "");
                         break;
                     case R.id.tab_Live:
-
                         mFragment = LIveFragment.newInstance("Favorites", "");
-
                         break;
                     case R.id.tab_Contact:
-
                         mFragment = ContactUsFragment.newInstance("Nearby", "");
                         break;
                     case R.id.tab_Login:
-
                         mFragment = LoginFragment.newInstance("Friends", "");
                         break;
 
